@@ -86,10 +86,10 @@ func GetGymStats(db *sqlx.DB) (GymStats, error) {
 	var err error
 	err = db.Get(&gymStats, `
 		SELECT 
-            SUM(CASE WHEN team_id = 0 THEN 1 ELSE 0 END) AS uncontested,
-            SUM(CASE WHEN team_id = 1 THEN 1 ELSE 0 END) AS valor,
-            SUM(CASE WHEN team_id = 2 THEN 1 ELSE 0 END) AS mystic,
-            SUM(CASE WHEN team_id = 3 THEN 1 ELSE 0 END) AS instinct
+			COALESCE(SUM(CASE WHEN team_id = 0 THEN 1 ELSE 0 END), 0) AS uncontested,
+			COALESCE(SUM(CASE WHEN team_id = 1 THEN 1 ELSE 0 END), 0) AS valor,
+			COALESCE(SUM(CASE WHEN team_id = 2 THEN 1 ELSE 0 END), 0) AS mystic,
+			COALESCE(SUM(CASE WHEN team_id = 3 THEN 1 ELSE 0 END), 0) AS instinct
 		FROM 
 			gym 
 		WHERE 
