@@ -14,9 +14,16 @@ Porygon is a fork of https://github.com/roundaboutluke/porygon : Discordopole fo
 3. `go build .`
 5. `pm2 start ./porygon --name porygon`
 
+---
+
+There's also a Docker image `ghcr.io/lenisko/porygon:main`
+
+
 # Further Customisation
 
 Basic customisation of Porygon's localisation and layout. Simply `cp templates/current.json templates/current.override.json` and edit accordingly, using the examples in current.json. Note that some of the more generic emojis are contained within this.
+
+To get emoji working, you want to create two guilds where one would be for bot to join and store emojis. On emote guild execute `/create-emotes` and `/list-emotes` to upload and list emotes for template needs. Emotes can be used on all guilds bot is logged.
 
 # Updating
 
