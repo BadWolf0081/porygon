@@ -32,6 +32,10 @@ var (
 			DefaultMemberPermissions: &defaultMemberPermissions,
 			DMPermission:             &dmPermission,
 		},
+		{
+			Name:        "report",
+			Description: "Post an end-of-day report now",
+		},
 	}
 
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
