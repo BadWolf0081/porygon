@@ -11,6 +11,7 @@ name = "golbatdbname"
 token = ""
 #channel IDs for Discord that you want the boards posted to, array support infinite channels
 channelIDs = ["yourchannelid","moarchannelids"]
+endOfDayChannelID = "your_end_of_day_channel_id"
 
 [level_emoji]
 "1" = "1️⃣"

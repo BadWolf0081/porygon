@@ -45,6 +45,7 @@ type coordinates struct {
 }
 
 type discord struct {
-	Token      string
-	ChannelIDs []string
+	Token             string
+	ChannelIDs        []string
+	EndOfDayChannelID string
 }
