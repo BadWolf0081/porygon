@@ -162,6 +162,41 @@ func main() {
 	dg.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := discord.CommandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
+			return
+		}
+		// Handle /report command
+		if i.ApplicationCommandData().Name == "report" {
+			go func() {
+				db, err := database.DbConn(c)
+				if err != nil {
+					log.Println("error connecting to MariaDB for /report,", err)
+					return
+				}
+				gathered, err := gatherStats(db, c)
+				db.Close()
+				if err != nil {
+					log.Println("failed to fetch /report stats,", err)
+					return
+				}
+				fields := discord.GenerateFields(gathered, c)
+				embed := &discordgo.MessageEmbed{
+					Title:     "End of Day Report",
+					Fields:    fields,
+					Timestamp: time.Now().Format(time.RFC3339),
+				}
+				endOfDayChannelID := c.Discord.EndOfDayChannelID
+				_, err = s.ChannelMessageSendEmbed(endOfDayChannelID, embed)
+				if err != nil {
+					log.Println("Error sending /report end-of-day report:", err)
+				}
+				// Optionally, reply to the user who triggered the command
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "End of Day report posted.",
+					},
+				})
+			}()
 		}
 	})
 
@@ -280,10 +315,57 @@ func main() {
 		}
 	}()
 
+	go func() {
+		for {
+			now := time.Now()
+			// Calculate duration until next 23:59
+			next := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 0, 0, now.Location())
+			if now.After(next) {
+				next = next.Add(24 * time.Hour)
+			}
+			time.Sleep(time.Until(next))
+
+			db, err := database.DbConn(c)
+			if err != nil {
+				log.Println("error connecting to MariaDB for end-of-day,", err)
+				continue
+			}
+			gathered, err := gatherStats(db, c)
+			db.Close()
+			if err != nil {
+				log.Println("failed to fetch end-of-day stats,", err)
+				continue
+			}
+
+			fields := discord.GenerateFields(gathered, c)
+			embed := &discordgo.MessageEmbed{
+				Title:     "End of Day Report",
+				Fields:    fields,
+				Timestamp: time.Now().Format(time.RFC3339),
+			}
+
+			// Post to a different room/channel
+			endOfDayChannelID := c.Discord.EndOfDayChannelID // Add this to your config
+			_, err = dg.ChannelMessageSendEmbed(endOfDayChannelID, embed)
+			if err != nil {
+				log.Println("Error sending end-of-day report:", err)
+			}
+
+			// (Optional) Reset stats here if needed
+		}
+	}()
+
 	log.Println("Porygon is now running. Press CTRL-C to exit.")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
 	log.Println("Received signal. Exiting...")
+}
+
+var Commands = []*discordgo.ApplicationCommand{
+	{
+		Name:        "report",
+		Description: "Post an end-of-day report now",
+	},
 }
